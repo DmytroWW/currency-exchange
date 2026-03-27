@@ -11,7 +11,7 @@ public class DataSource {
 	private static final HikariDataSource ds;
 
 	static {
-		config.setJdbcUrl("jdbc:sqlite:db/currency.db");
+		config.setJdbcUrl("jdbc:sqlite:D:/Eclipse workspace/CurrencyExchange/db/currency.db");
 		config.setDriverClassName("org.sqlite.JDBC");
 
 		config.setMaximumPoolSize(10);

@@ -1,12 +1,14 @@
 package com.dmyk.model;
 
 import com.dmyk.utils.DataTransferObject;
+import com.google.gson.annotations.SerializedName;
 
 public class Currency implements DataTransferObject {
 
 	private int id;
+	@SerializedName("name")
+	private String fullName;
 	private String code;
-	private String fullName; // В ТЗ це FullName
 	private String sign;
 
 	public Currency(int id, String code, String fullName, String sign) {

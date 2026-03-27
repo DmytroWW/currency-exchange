@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import com.dmyk.model.Currency;
 import com.dmyk.utils.DataAccessObject;
@@ -16,6 +17,7 @@ public class CurrencyDAO extends DataAccessObject<Currency> {
 	private static final String FIND_ALL = "SELECT id, code, full_name, sign FROM Currencies";
 	private static final String INSERT = "INSERT INTO Currencies (code, full_name, sign) VALUES (?, ?, ?)";
 	private static final String FIND_BY_ID = "SELECT id, code, full_name, sign FROM Currencies WHERE id = ?";
+	private static final String FIND_BY_CODE = "SELECT id, code, full_name, sign FROM Currencies WHERE code = ?";
 
 	public CurrencyDAO(Connection connection) {
 		super(connection);
@@ -53,6 +55,20 @@ public class CurrencyDAO extends DataAccessObject<Currency> {
 		return currencies;
 	}
 
+	public Optional<Currency> findByCode(String code) {
+		try (PreparedStatement statement = this.connection.prepareStatement(FIND_BY_CODE)) {
+			statement.setString(1, code);
+			ResultSet rs = statement.executeQuery();
+			if (rs.next()) {
+				return Optional.of(mapResultSetToCurrency(rs));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("Помилка при пошуку валюти за кодом: " + code, e);
+		}
+		return Optional.empty();
+	}
+
 	private Currency mapResultSetToCurrency(ResultSet rs) throws SQLException {
 		return new Currency(rs.getInt("id"), rs.getString("code"), rs.getString("full_name"), rs.getString("sign"));
 	}
@@ -74,10 +90,10 @@ public class CurrencyDAO extends DataAccessObject<Currency> {
 				}
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
-			throw new RuntimeException("Помилка при створенні валюти", e);
+
+			throw new RuntimeException(e);
 		}
-		return null;
+		return dto;
 	}
 
 	@Override
