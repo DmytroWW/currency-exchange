@@ -130,34 +130,43 @@ public class ExchangeRateDAO extends DataAccessObject<ExchangeRate> {
 	}
 
 	public ExchangeRate updateByCodes(String baseCode, String targetCode, BigDecimal rate) {
+
 		try (PreparedStatement updateStatement = connection.prepareStatement(UPDATE_BY_CODES)) {
 			updateStatement.setBigDecimal(1, rate);
 			updateStatement.setString(2, baseCode);
 			updateStatement.setString(3, targetCode);
 
 			int affectedRows = updateStatement.executeUpdate();
+
 			if (affectedRows == 0) {
 				return null;
 			}
 		} catch (SQLException e) {
-			throw new RuntimeException("Database error while updating rate for " + baseCode + targetCode, e);
+			throw new RuntimeException("Database error while updating rate for: " + baseCode + targetCode, e);
 		}
 
-		try (PreparedStatement findByCodesStatement = connection.prepareStatement(FIND_BY_CODES)) {
-			findByCodesStatement.setString(1, baseCode);
-			findByCodesStatement.setString(2, targetCode);
+		return findByCodes(baseCode, targetCode);
+	}
 
-			try (ResultSet rs = findByCodesStatement.executeQuery()) {
+	public ExchangeRate findByCodes(String baseCode, String targetCode) {
+		try (PreparedStatement statement = connection.prepareStatement(FIND_BY_CODES)) {
+			statement.setString(1, baseCode);
+			statement.setString(2, targetCode);
+
+			try (ResultSet rs = statement.executeQuery()) {
 				if (rs.next()) {
-					Currency base = mapCurrency(rs, "base_");
-					Currency target = mapCurrency(rs, "target_");
-					return new ExchangeRate(rs.getInt("id"), base, target, rs.getBigDecimal("rate"));
+					Currency baseCurrency = mapCurrency(rs, "base_");
+					Currency targetCurrency = mapCurrency(rs, "target_");
+
+					return new ExchangeRate(rs.getInt("id"), baseCurrency, targetCurrency, rs.getBigDecimal("rate"));
 				}
-
 			}
-
 		} catch (SQLException e) {
-			throw new RuntimeException("Error fetching updated rate from database for " + baseCode + targetCode, e);
+
+			e.printStackTrace();
+
+			throw new RuntimeException(
+					"Database error while fetching exchange rate for codes: " + baseCode + " and " + targetCode, e);
 		}
 
 		return null;
