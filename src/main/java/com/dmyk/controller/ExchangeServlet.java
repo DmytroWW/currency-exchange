@@ -2,57 +2,43 @@ package com.dmyk.controller;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.sql.Connection;
 
 import com.dmyk.dao.ExchangeRateDAO;
 import com.dmyk.dto.ExchangeResponseDTO;
 import com.dmyk.service.ExchangeService;
-import com.dmyk.utils.DataSource;
-import com.google.gson.Gson;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @WebServlet("/exchange")
-public class ExchangeServlet extends HttpServlet {
-	/**
-	 * 
-	 */
+public class ExchangeServlet extends BaseServlet {
 	private static final long serialVersionUID = 1L;
-	private ExchangeService exchangeService;
+	private final ExchangeService exchangeService = new ExchangeService(ExchangeRateDAO.getInstance());
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		String from = req.getParameter("from");
-		String to = req.getParameter("to");
-		String amountStr = req.getParameter("amount");
 
-		if (from == null || to == null || amountStr == null) {
-			resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing parameters");
+		if (!areParametersValid(req, "from", "to", "amount")) {
+			sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Missing or empty parameters: from, to, amount");
 			return;
 		}
 
-		try (Connection connection = DataSource.getConnection()) {
-			ExchangeRateDAO dao = new ExchangeRateDAO(connection);
-			exchangeService = new ExchangeService(dao);
-			BigDecimal amount = new BigDecimal(amountStr);
-			ExchangeResponseDTO responseDTO = exchangeService.convert(from, to, amount);
+		try {
+
+			ExchangeResponseDTO responseDTO = exchangeService.convert(req.getParameter("from").toUpperCase(),
+					req.getParameter("to").toUpperCase(), new BigDecimal(req.getParameter("amount")));
 
 			if (responseDTO == null) {
-				resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Exchange rate not found");
+				sendError(resp, HttpServletResponse.SC_NOT_FOUND, "Exchange rate not found for the given pair");
 				return;
 			}
 
-			String json = new Gson().toJson(responseDTO);
-			resp.setContentType("application/json");
-			resp.setCharacterEncoding("UTF-8");
-			resp.getWriter().write(json);
+			sendJson(resp, responseDTO);
 
-		} catch (Exception e) {
-			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+		} catch (NumberFormatException e) {
+			sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid amount format");
 		}
 	}
 }

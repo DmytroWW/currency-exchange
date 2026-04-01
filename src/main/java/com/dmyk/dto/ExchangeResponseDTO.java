@@ -2,37 +2,35 @@ package com.dmyk.dto;
 
 import java.math.BigDecimal;
 
-import com.dmyk.model.Currency;
-
 public class ExchangeResponseDTO {
-	private Currency baseCurrency;
-	private Currency targetCurrency;
+	private CurrencyDTO baseCurrency;
+	private CurrencyDTO targetCurrency;
 	private BigDecimal rate;
 	private BigDecimal amount;
 	private BigDecimal convertedAmount;
 
-	public ExchangeResponseDTO(Currency base, Currency target, BigDecimal rate, BigDecimal amount,
-			BigDecimal converted) {
+	public ExchangeResponseDTO(CurrencyDTO base, CurrencyDTO target, BigDecimal rate, BigDecimal amount,
+			BigDecimal convertedAmount) {
 		this.baseCurrency = base;
 		this.targetCurrency = target;
 		this.rate = rate;
 		this.amount = amount;
-		this.convertedAmount = converted;
+		this.convertedAmount = convertedAmount;
 	}
 
-	public Currency getBaseCurrency() {
+	public CurrencyDTO getBaseCurrency() {
 		return baseCurrency;
 	}
 
-	public void setBaseCurrency(Currency baseCurrency) {
+	public void setBaseCurrency(CurrencyDTO baseCurrency) {
 		this.baseCurrency = baseCurrency;
 	}
 
-	public Currency getTargetCurrency() {
+	public CurrencyDTO getTargetCurrency() {
 		return targetCurrency;
 	}
 
-	public void setTargetCurrency(Currency targetCurrency) {
+	public void setTargetCurrency(CurrencyDTO targetCurrency) {
 		this.targetCurrency = targetCurrency;
 	}
 
