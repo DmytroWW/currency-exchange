@@ -78,7 +78,7 @@ public class CurrencyDAO implements CrudDAO<Currency> {
 				}
 			}
 		} catch (SQLException e) {
-			throw new DatabaseException("Error to find currency by code " + code, e);
+			throw new DatabaseException(e.getMessage(), e);
 		}
 		return Optional.empty();
 	}

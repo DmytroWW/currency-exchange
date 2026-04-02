@@ -20,17 +20,24 @@ public abstract class BaseServlet extends HttpServlet {
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		try {
-			super.service(req, resp);
-		} catch (DatabaseException e) {
 
-			if (e.getMessage().contains("already exists")) {
-				sendError(resp, HttpServletResponse.SC_CONFLICT, e.getMessage());
-			} else {
-				sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-			}
+			super.service(req, resp);
 		} catch (Exception e) {
-			// Всі інші непередбачувані помилки
-			sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+
+			handleException(e, resp);
+		}
+	}
+
+	private void handleException(Exception e, HttpServletResponse resp) throws IOException {
+
+		if (e instanceof DatabaseException) {
+
+			int status = e.getMessage().contains("already exists") ? HttpServletResponse.SC_CONFLICT
+					: HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+			sendError(resp, status, e.getMessage());
+		} else {
+
+			sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Server error: " + e.getMessage());
 		}
 	}
 
@@ -41,23 +48,20 @@ public abstract class BaseServlet extends HttpServlet {
 		resp.getWriter().write(gson.toJson(Map.of("message", message)));
 	}
 
-	// 2. Для звичайних успішних відповідей (200 OK) - наприклад, список валют
 	protected void sendJson(HttpServletResponse resp, Object data) throws IOException {
 		resp.setContentType("application/json");
 		resp.setCharacterEncoding("UTF-8");
 		resp.getWriter().write(gson.toJson(data));
 	}
 
-	// 3. Спеціально для POST запитів (201 Created) - те, що ти просив
 	protected void sendCreatedJson(HttpServletResponse resp, Object data) throws IOException {
-		resp.setStatus(HttpServletResponse.SC_CREATED); // Ставить 201
+		resp.setStatus(HttpServletResponse.SC_CREATED);
 		resp.setContentType("application/json");
 		resp.setCharacterEncoding("UTF-8");
 		resp.getWriter().write(gson.toJson(data));
 	}
 
 	protected Map<String, String> parseFormBody(HttpServletRequest req) throws IOException {
-
 		String body = req.getReader().lines().collect(Collectors.joining());
 		Map<String, String> params = new HashMap<>();
 
@@ -66,16 +70,12 @@ public abstract class BaseServlet extends HttpServlet {
 		}
 
 		String[] pairs = body.split("&");
-
 		for (String pair : pairs) {
-
 			String[] keyValue = pair.split("=");
-
 			if (keyValue.length == 2) {
 				params.put(keyValue[0], keyValue[1]);
 			}
 		}
-
 		return params;
 	}
 
@@ -88,5 +88,4 @@ public abstract class BaseServlet extends HttpServlet {
 		}
 		return true;
 	}
-
 }
