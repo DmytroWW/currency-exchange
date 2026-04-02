@@ -75,7 +75,7 @@ public abstract class BaseServlet extends HttpServlet {
 			if (keyValue.length == 2) {
 				params.put(keyValue[0], keyValue[1]);
 			}
-		}
+		}І
 		return params;
 	}
 
